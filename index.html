@@ -2,637 +2,521 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Capital Ledger - Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Capital Ledger</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-main: #0B0B0C;
-            --bg-ash: #121215;
-            --border-premium: #1D1D22;
-            --accent-blue: #5B8FB9;
-            --premium-inflow: #7CA992;
-            --premium-outflow: #A97C7C;
-            --premium-o2c: #8A8A93;
-            --text-main: #E4E4E7;
-            --text-muted: #696974;
+            --bg-card: #121214;
+            --border: #1E1E22;
+            --text-main: #FFFFFF;
+            --text-muted: #71717A;
+            
+            /* Premium Lower-Brightness Calibrated Pastel Tones */
+            --green: #42996C;
+            --red: #A74A4A;
+            --blue: #3A82F6;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            letter-spacing: -0.2px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
+            margin: 0; padding: 0; background-color: var(--bg-main); color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif; -webkit-font-smoothing: antialiased;
+            display: flex; justify-content: center; min-height: 100vh; overflow: hidden;
         }
 
         .app-shell {
-            width: 100%;
-            max-width: 390px;
-            height: 100vh;
-            background-color: var(--bg-main);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
+            width: 100%; max-width: 430px; height: 100vh; background-color: var(--bg-main);
+            display: flex; flex-direction: column; position: relative;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
         }
 
-        @media (min-width: 400px) {
-            .app-shell {
-                height: 844px;
-                border-radius: 32px;
-                border: 1px solid var(--border-premium);
-                box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-            }
+        /* Views Main Container */
+        .view-container {
+            flex: 1; overflow-y: auto; padding: 24px 20px; display: none;
+        }
+        .view-container.active { display: block; }
+
+        /* Top Bar Styling */
+        .top-navbar {
+            display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px;
+        }
+        .app-brand { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .brand-dot { width: 6px; height: 6px; background-color: var(--green); border-radius: 50%; }
+        .analytics-icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; }
+
+        /* Dashboard Headers */
+        .balance-card { text-align: center; padding: 16px 0 20px 0; }
+        .balance-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .main-balance-amount { font-size: 40px; font-weight: 700; margin-top: 6px; letter-spacing: -0.5px; }
+        
+        /* Expanded 3-Line Deep Pro Tip Styling with Refresh Button */
+        .status-pill {
+            background-color: #0E1612; border: 1px solid #162E20; color: #7BC49C;
+            border-radius: 16px; padding: 16px; font-size: 13px; display: flex;
+            align-items: flex-start; justify-content: space-between; gap: 14px;
+            margin: 0 auto 24px auto; width: calc(100% - 8px); min-height: 74px; line-height: 1.5;
+        }
+        .status-text-content { flex: 1; color: #A2D9BB; }
+        .tip-refresh-trigger { background: none; border: none; color: #7BC49C; cursor: pointer; font-size: 16px; padding: 0 4px; font-weight: bold; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; }
+        .view-all-link { color: var(--blue); font-size: 12px; text-decoration: none; font-weight: 500; }
+
+        /* Premium Activity Feed Rows */
+        .activity-list { display: flex; flex-direction: column; gap: 12px; }
+        .activity-item { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+        
+        .item-left-block { display: flex; align-items: center; gap: 14px; }
+        .icon-wrapper {
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .icon-wrapper.income { background-color: #0F1A15; color: var(--green); }
+        .icon-wrapper.expense { background-color: #1A1212; color: var(--red); }
+        .icon-wrapper.o2c { background-color: #18181B; color: var(--text-muted); }
+
+        .meta-details { display: flex; flex-direction: column; gap: 4px; }
+        .meta-title { font-size: 14px; font-weight: 500; color: var(--text-main); }
+        .meta-sub-row { display: flex; align-items: center; gap: 6px; }
+        .badge-tag { background: var(--bg-card); border: 1px solid var(--border); font-size: 9px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
+        .date-string { font-size: 11px; color: var(--text-muted); }
+        
+        .amount-value { font-size: 14px; font-weight: 600; letter-spacing: -0.2px; }
+        .amount-value.income { color: var(--green); }
+        .amount-value.expense { color: var(--red); }
+        .amount-value.o2c { color: var(--text-main); }
+
+        /* Form Controls View */
+        .form-view-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+        .back-chevron { font-size: 18px; color: var(--text-muted); cursor: pointer; }
+        .view-heading-text { font-size: 18px; font-weight: 600; }
+
+        .form-group-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; }
+        .segmented-control { display: flex; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 24px; }
+        .segment-btn { flex: 1; background: none; border: none; color: var(--text-muted); padding: 12px; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; }
+        .segment-btn.active.expense { background: #261717; color: var(--red); }
+        .segment-btn.active.income { background: #13241A; color: var(--green); }
+        .segment-btn.active.o2c { background: #1F1F23; color: var(--text-main); }
+
+        .premium-input-box {
+            width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 16px; color: var(--text-main); font-size: 15px; outline: none; margin-bottom: 24px; font-family: inherit;
         }
 
-        .header-section {
-            padding: 30px 24px 16px 24px;
+        .action-submit-btn {
+            width: 100%; background: #3A82F6; color: white; border: none; padding: 16px; border-radius: 14px;
+            font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px;
         }
 
-        .balance-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
+        /* Wishlist View */
+        .split-input-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .empty-state-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 48px 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
-        .lbl-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+        /* AI Assistant Screen */
+        .ai-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .ai-avatar { width: 32px; height: 32px; background: #1D2A3A; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--blue); font-size: 16px; }
+        .ai-meta-txt { display: flex; flex-direction: column; gap: 2px; }
+        .chat-logs-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 160px; max-height: 55vh; overflow-y: auto; }
+        .chat-bubble { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; font-size: 14px; line-height: 1.5; max-width: 85%; color: #E4E4E7; }
+        
+        .chat-input-wrapper { position: absolute; bottom: 95px; left: 20px; right: 20px; display: flex; gap: 10px; background: var(--bg-main); padding-top: 5px; }
+        .chat-field { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 50px; padding: 14px 20px; color: white; outline: none; font-size: 14px; }
+        .chat-send-btn { width: 46px; height: 46px; background: #1D2A3A; border: none; border-radius: 50%; color: var(--blue); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; }
 
-        .balance-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 6px;
-        }
+        /* Analytics Chart Section */
+        .chart-container { display: flex; justify-content: center; align-items: center; padding: 20px 0; position: relative; margin-bottom: 32px; }
+        .donut-svg { transform: rotate(-90deg); width: 220px; height: 220px; }
+        .donut-bg { fill: none; stroke: var(--green); stroke-width: 24; }
+        .donut-segment { fill: none; stroke: var(--red); stroke-width: 24; stroke-dasharray: 628; stroke-dashoffset: 628; transition: stroke-dashoffset 0.3s; }
+        .chart-center-labels { position: absolute; text-align: center; }
+        .chart-lbl-top { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; font-weight: 500; }
+        .chart-lbl-amt { font-size: 26px; font-weight: 700; margin-top: 4px; }
 
-        .capital-output {
-            font-size: 32px;
-            font-weight: 400;
-            color: #FFFFFF;
-            transition: all 0.2s ease;
-        }
+        .breakdown-row { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .breakdown-left { display: flex; flex-direction: column; gap: 4px; }
+        .breakdown-title { font-size: 14px; font-weight: 500; }
+        .breakdown-pct { font-size: 11px; color: var(--text-muted); }
 
-        .shutter-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            transition: color 0.2s;
+        /* Bottom Navigation Bar Grid */
+        .bottom-navigation {
+            position: absolute; bottom: 0; left: 0; right: 0; height: calc(74px + env(safe-area-inset-bottom));
+            background: rgba(11, 11, 12, 0.94); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center;
+            padding: 0 10px env(safe-area-inset-bottom) 10px; z-index: 90;
         }
-
-        .shutter-btn:hover { color: var(--text-main); }
-
-        .tip-strip {
-            background-color: var(--bg-ash);
-            border: 1px solid var(--border-premium);
-            border-radius: 12px;
-            padding: 10px 14px;
-            margin: 0 24px 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
+        .nav-tab-item { background: none; border: none; color: var(--text-muted); padding: 12px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .nav-tab-item.active { color: var(--text-main); }
+        .nav-tab-item.active.blue-intent { color: var(--blue); }
+        
+        .central-add-btn {
+            width: 48px; height: 48px; background: #222226; border: 1px solid var(--border); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4); margin-bottom: 2px;
         }
-
-        .tip-txt {
-            font-size: 12px;
-            color: #A1A1AA;
-            line-height: 1.4;
-            font-weight: 300;
-        }
-
-        .refresh-btn {
-            background: none;
-            border: none;
-            color: var(--accent-blue);
-            cursor: pointer;
-            font-size: 14px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        .refresh-btn:active { background: #1C1C24; }
-
-        .input-wrapper {
-            padding: 0 24px 20px 24px;
-        }
-
-        .premium-input {
-            width: 100%;
-            background-color: var(--bg-ash);
-            border: 1px solid var(--border-premium);
-            border-radius: 12px;
-            padding: 14px 16px;
-            color: #FFFFFF;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .premium-input::placeholder { color: #4B4B55; }
-        .premium-input:focus { border-color: #3A3A44; }
-
-        .tab-bar {
-            display: flex;
-            border-bottom: 1px solid var(--border-premium);
-            margin: 0 24px;
-        }
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px 0;
-            font-size: 12px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        .tab.active {
-            color: var(--text-main);
-            border-bottom: 1px solid var(--text-main);
-        }
-
-        .dual-ledger-view {
-            flex: 1;
-            display: flex;
-            gap: 16px;
-            padding: 20px 24px;
-            overflow-y: auto;
-        }
-
-        .ledger-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .col-header {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-muted);
-            padding-bottom: 8px;
-            border-bottom: 1px dashed var(--border-premium);
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .mini-row {
-            display: flex;
-            flex-direction: column;
-            padding: 10px 0;
-            border-bottom: 1px solid #141417;
-            position: relative;
-        }
-
-        .history-marker {
-            position: absolute;
-            left: -8px;
-            top: 14px;
-            width: 3px;
-            height: 14px;
-            border-radius: 2px;
-            background: transparent;
-        }
-
-        .mini-row-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-
-        .mini-title { font-size: 13px; font-weight: 400; color: #E4E4E7; }
-        .mini-amt { font-size: 13px; font-weight: 500; }
-        .mini-meta { font-size: 10px; color: var(--text-muted); margin-top: 3px; display: flex; gap: 6px;}
-
-        .panel-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-main);
-            z-index: 50;
-            display: none;
-            flex-direction: column;
-            box-sizing: border-box;
-            padding: 24px;
-        }
-        .panel-overlay.active { display: flex; }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .chat-logs {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding-bottom: 16px;
-        }
-        .msg { font-size: 13px; max-width: 85%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; }
-        .msg.ai { background-color: var(--bg-ash); color: #E4E4E7; align-self: flex-start; border: 1px solid var(--border-premium); }
-        .msg.user { background-color: #24242B; color: #FFFFFF; align-self: flex-end; }
-
-        .wishlist-box {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-        }
-        .wish-card {
-            background-color: var(--bg-ash);
-            border: 1px solid var(--border-premium);
-            border-radius: 12px;
-            padding: 16px;
-        }
-        .wish-title { font-size: 14px; font-weight: 500; color: #FFFFFF; }
-        .wish-math { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
-        .wish-highlight { color: var(--accent-blue); font-weight: 500; }
-
-        .footer-nav {
-            display: flex;
-            border-top: 1px solid var(--border-premium);
-            background-color: var(--bg-ash);
-            padding: 8px 0;
-        }
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 8px 0;
-            transition: color 0.2s;
-        }
-        .nav-item.active { color: var(--accent-blue); }
     </style>
 </head>
 <body>
 
     <div class="app-shell">
-        <div class="header-section">
-            <div class="balance-row">
-                <span class="lbl-title">Unified Capital Pool</span>
-                <span class="lbl-title" style="cursor:pointer; color:var(--accent-blue);" onclick="openPanel('metrics-panel')">Metrics ↗</span>
-            </div>
-            <div class="balance-container">
-                <div class="capital-output" id="main-balance">₹11,750</div>
-                <button class="shutter-btn" onclick="togglePrivacy()" id="shutter-toggle">👁️</button>
-            </div>
-        </div>
 
-        <div class="tip-strip">
-            <div class="tip-txt" id="tip-display">Maintaining unified financial parameters. Safe floor tracking active.</div>
-            <button class="refresh-btn" onclick="cycleTips()">↻</button>
-        </div>
-
-        <div class="input-wrapper">
-            <input type="text" id="main-entry-box" class="premium-input" placeholder="Enter ledger record (e.g., -1200 subscription march)">
-        </div>
-
-        <div class="tab-bar">
-            <div class="tab active" id="tab-ledger-btn" onclick="switchMainTab('ledger')">Transactions Ledger</div>
-            <div class="tab" id="tab-wish-btn" onclick="switchMainTab('wishlist')">Target Outflows</div>
-        </div>
-
-        <div class="dual-ledger-view" id="ledger-tab-view">
-            <div class="ledger-column">
-                <div class="col-header">(+) Incoming</div>
-                <div id="inflow-list"></div>
+        <div class="view-container active" id="view-dashboard">
+            <div class="top-navbar" style="padding-left:0; padding-right:0;">
+                <div class="app-brand">Capital Ledger <div class="brand-dot"></div></div>
+                <button class="analytics-icon-btn" onclick="navigateTo('view-analytics')">📊</button>
             </div>
 
-            <div class="ledger-column">
-                <div class="col-header">(-) Outgoing</div>
-                <div id="outflow-list"></div>
+            <div class="balance-card">
+                <div class="balance-label">Total Capital 👁️</div>
+                <div class="main-balance-amount" id="dashboard-total-pool">₹0</div>
+            </div>
+
+            <div class="status-pill">
+                <div class="status-text-content" id="status-pill-text">Welcome to your clean slate ledger. Tap the cross action tabs below to log your fresh allocations.</div>
+                <button class="tip-refresh-trigger" onclick="cycleProTips()">↻</button>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">Recent Activity</div>
+                <a href="#" class="view-all-link" onclick="navigateTo('view-all-records')">View All ☰</a>
+            </div>
+
+            <div class="activity-list" id="dashboard-recent-target">
+                </div>
+        </div>
+
+        <div class="view-container" id="view-all-records">
+            <div class="form-view-header">
+                <span class="back-chevron" onclick="navigateTo('view-dashboard')">✕</span>
+                <span class="view-heading-text">All Records</span>
+            </div>
+            
+            <div class="section-title" style="margin-bottom:14px; color:var(--green);">Inflow +</div>
+            <div class="activity-list" id="all-inflows-target" style="margin-bottom:24px;"></div>
+
+            <div class="section-title" style="margin-bottom:14px; color:var(--red);">Outflow -</div>
+            <div class="activity-list" id="all-outflows-target"></div>
+        </div>
+
+        <div class="view-container" id="view-add-record">
+            <div class="form-view-header">
+                <span class="back-chevron" onclick="navigateTo('view-dashboard')">✕</span>
+                <span class="view-heading-text">Add Record</span>
+            </div>
+
+            <div class="form-group-label">Type</div>
+            <div class="segmented-control">
+                <button class="segment-btn active expense" id="seg-expense" onclick="setFormType('expense')">Expense</button>
+                <button class="segment-btn" id="seg-income" onclick="setFormType('income')">Income</button>
+                <button class="segment-btn" id="seg-o2c" onclick="setFormType('o2c')">O2C</button>
+            </div>
+
+            <div class="form-group-label">Amount</div>
+            <input type="number" id="form-amount" class="premium-input-box" placeholder="₹ 0.00" inputmode="numeric">
+
+            <div class="form-group-label">Description</div>
+            <input type="text" id="form-desc" class="premium-input-box" placeholder="e.g. Coffee, Salary, Groceries...">
+
+            <div class="form-group-label">Category</div>
+            <input type="text" id="form-cat" class="premium-input-box" placeholder="FOOD, UTILITIES, RENT...">
+
+            <button class="action-submit-btn" onclick="saveNewRecordData()">Save Record</button>
+        </div>
+
+        <div class="view-container" id="view-wishlist">
+            <div class="form-view-header">
+                <span class="back-chevron" onclick="navigateTo('view-dashboard')">✕</span>
+                <span class="view-heading-text">Wishlist</span>
+            </div>
+            <div class="split-input-row">
+                <input type="text" id="wish-name" class="premium-input-box" style="margin-bottom:0;" placeholder="What do you want?">
+                <input type="number" id="wish-price" class="premium-input-box" style="margin-bottom:0; max-width:110px;" placeholder="Price">
+                <button class="central-add-btn" style="border-radius:12px; height:52px; width:52px; background:#3A82F6; border:none;" onclick="addWishItem()">+</button>
+            </div>
+            <div id="wishlist-target-box">
+                <div class="empty-state-card">Add something you want to save up for</div>
             </div>
         </div>
 
-        <div class="dual-ledger-view" id="wishlist-tab-view" style="display: none; flex-direction: column;">
-            <div class="col-header" style="margin-bottom: 14px;">Capital Goal Targets</div>
-            <div class="wishlist-box" id="wishlist-container"></div>
-        </div>
-
-        <div class="panel-overlay" id="gemini-panel">
-            <div class="panel-header">
-                <span class="lbl-title" style="color: var(--accent-blue);">Gemini Assistant Terminal</span>
-                <span class="lbl-title" style="cursor:pointer; font-size:14px;" onclick="closePanel('gemini-panel')">✕</span>
+        <div class="view-container" id="view-ai-terminal">
+            <div class="ai-header">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-meta-txt">
+                    <span style="font-size:14px; font-weight:600;">Capital AI</span>
+                    <span style="font-size:10px; text-transform:uppercase; color:var(--text-muted); letter-spacing:0.5px;">Advisor</span>
+                </div>
             </div>
-            <div class="chat-logs" id="chat-output-logs">
-                <div class="msg ai">Systems initialized. I am reviewing your ledger balances and parsing inbound transfers in real time. How can I help refine your financial tracking?</div>
+            
+            <div class="chat-logs-container" id="chat-logs-container">
+                <div class="chat-bubble">I can see your transactions. Ask me anything — spending habits, affordability, savings goals.</div>
             </div>
-            <input type="text" id="chat-input-box" class="premium-input" placeholder="Ask Gemini about transactions...">
-        </div>
-
-        <div class="panel-overlay" id="metrics-panel">
-            <div class="panel-header">
-                <span class="lbl-title">Equation Metrics Analytics</span>
-                <span class="lbl-title" style="cursor:pointer; font-size:14px;" onclick="closePanel('metrics-panel')">✕</span>
-            </div>
-            <div class="wish-card" style="margin-bottom:16px;">
-                <div class="lbl-title" style="margin-bottom:10px;">Food Slice Proportion Metrics</div>
-                <div style="font-size:24px; font-weight:300;" id="metrics-pct-output">0%</div>
-                <div class="wish-math" id="metrics-formula-line" style="margin-top:10px;">No operational outgoing rows detected.</div>
+            
+            <div class="chat-input-wrapper">
+                <input type="text" id="chat-user-input" class="chat-field" placeholder="Ask about your spending...">
+                <button class="chat-send-btn" onclick="askGeminiAdvisor()">➔</button>
             </div>
         </div>
 
-        <div class="footer-nav">
-            <div class="nav-item active" id="nav-home" onclick="uiRoute('home')">Ledger</div>
-            <div class="nav-item" id="nav-ai" onclick="uiRoute('ai')">Gemini Terminal</div>
+        <div class="view-container" id="view-analytics">
+            <div class="form-view-header">
+                <span class="back-chevron" onclick="navigateTo('view-dashboard')">✕</span>
+                <span class="view-heading-text">Analytics</span>
+            </div>
+
+            <div class="chart-container">
+                <svg class="donut-svg">
+                    <circle class="donut-bg" cx="110" cy="110" r="90"></circle>
+                    <circle class="donut-segment" id="donut-segment-ring" cx="110" cy="110" r="90"></circle>
+                </svg>
+                <div class="chart-center-labels">
+                    <div class="chart-lbl-top">Outflow</div>
+                    <div class="chart-lbl-amt" id="chart-center-total-out">₹0</div>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-bottom:16px;">Breakdown</div>
+            <div id="analytics-breakdown-target"></div>
         </div>
+
+        <div class="bottom-navigation">
+            <button class="nav-tab-item active" id="nav-dash" onclick="navigateTo('view-dashboard')">🏠</button>
+            <button class="nav-tab-item" id="nav-records" onclick="navigateTo('view-all-records')">📋</button>
+            <button class="central-add-btn" onclick="navigateTo('view-add-record')">+</button>
+            <button class="nav-tab-item" id="nav-wish" onclick="navigateTo('view-wishlist')">⭐</button>
+            <button class="nav-tab-item" id="nav-ai" onclick="navigateTo('view-ai-terminal')">💬</button>
+        </div>
+
     </div>
 
     <script>
-        let appState = JSON.parse(localStorage.getItem('premium_ledger_vault')) || {
-            capital: 11750,
-            isPrivate: false,
-            records: [
-                { id: 1, title: 'Subscription', cost: -1200, group: 'expense', tag: 'march', timestamp: '04:12 PM' },
-                { id: 2, title: 'Subscription', cost: -1200, group: 'expense', tag: 'june', timestamp: '09:00 AM' }
-            ],
-            wishlist: [
-                { id: 1, name: 'PlayStation 5 Console', valuation: 50000 }
-            ]
+        // CRITICAL UPDATE: Hardcoded key configuration and fresh state parameters
+        const GEMINI_API_KEY = "const GEMINI_API_KEY = localStorage.getItem('user_gemini_key') || prompt("Enter your Gemini API key:");
+if (GEMINI_API_KEY) localStorage.setItem('user_gemini_key', GEMINI_API_KEY);
+"; 
+
+        let state = JSON.parse(localStorage.getItem('premium_ledger_vault_prod_v2')) || {
+            totalPool: 0,
+            records: [],
+            wishlist: []
         };
 
-        const staticTipsList = [
-            "Unified capital pool monitored. Avoid fracturing balances across excessive active cards.",
-            "Recurring historical outlays match threshold configurations. Verify sub-accounts.",
-            "Capital retention framework optimized. Ensure safe floors are locked.",
-            "O2C adjustments executed correctly are net-neutral and preserve core balances.",
-            "System analysis complete: Current cash velocity is aligned with your targets."
+        const proTipsPool = [
+            "Your clean slate is fully prepared. Keep your fixed costs under 50% of your incoming ledger balance to scale your available net capital rapidly.",
+            "Analyzing velocity parameters. Logging outflows immediately prevents cash leaks and aligns your business funds safely with target project metrics.",
+            "Tracking target profiles. Try assigning strict categories to business entries like fabric materials to get clear, micro-managed monthly breakdown stats.",
+            "Capital retention system fully operational. Use the O2C tab toggle to account for inner credit allocations without shifting total cash parameters."
         ];
 
-        const contextMonthHashes = {
-            'jan': '#6B8E23', 'feb': '#8FBC8F', 'march': '#A4C2A5', 'april': '#4682B4',
-            'may': '#B0C4DE', 'june': '#A2B9CE', 'july': '#D3A297', 'aug': '#E2C4B9'
-        };
+        let currentSelectedFormType = 'expense';
 
         window.addEventListener('DOMContentLoaded', () => {
-            syncStateEngine();
-            setupConsoleListeners();
+            renderAppCoreState();
         });
 
-        function syncStateEngine() {
-            localStorage.setItem('premium_ledger_vault', JSON.stringify(appState));
-            renderDashboardUi();
+        function navigateTo(viewId) {
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            document.querySelectorAll('.nav-tab-item').forEach(btn => btn.classList.remove('active', 'blue-intent'));
+            if(viewId === 'view-dashboard') document.getElementById('nav-dash').classList.add('active');
+            if(viewId === 'view-all-records') document.getElementById('nav-records').classList.add('active');
+            if(viewId === 'view-wishlist') document.getElementById('nav-wish').classList.add('active');
+            if(viewId === 'view-ai-terminal') document.getElementById('nav-ai').classList.add('blue-intent');
         }
 
-        function renderDashboardUi() {
-            const balLabel = document.getElementById('main-balance');
-            if (appState.isPrivate) {
-                balLabel.innerText = "••••";
-                document.getElementById('shutter-toggle').innerText = "🙈";
-            } else {
-                balLabel.innerText = `₹${appState.capital.toLocaleString()}`;
-                document.getElementById('shutter-toggle').innerText = "👁️";
+        function setFormType(type) {
+            currentSelectedFormType = type;
+            document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active', 'expense', 'income', 'o2c'));
+            document.getElementById(`seg-${type}`).classList.add('active', type);
+        }
+
+        function cycleProTips() {
+            const randIndex = Math.floor(Math.random() * proTipsPool.length);
+            document.getElementById('status-pill-text').innerText = proTipsPool[randIndex];
+        }
+
+        function saveNewRecordData() {
+            const amt = parseFloat(document.getElementById('form-amount').value) || 0;
+            const desc = document.getElementById('form-desc').value.trim() || 'Untitled Log';
+            const cat = document.getElementById('form-cat').value.trim().toUpperCase() || 'GENERAL';
+
+            if(currentSelectedFormType === 'income') state.totalPool += amt;
+            if(currentSelectedFormType === 'expense') state.totalPool -= amt;
+
+            let directionalIcon = currentSelectedFormType === 'income' ? '↘' : (currentSelectedFormType === 'expense' ? '↗' : '—');
+
+            state.records.unshift({
+                id: Date.now(), title: desc, cat: cat, amt: amt, type: currentSelectedFormType,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), icon: directionalIcon
+            });
+
+            // Clear inputs
+            document.getElementById('form-amount').value = '';
+            document.getElementById('form-desc').value = '';
+            document.getElementById('form-cat').value = '';
+
+            saveAndSync();
+            navigateTo('view-dashboard');
+        }
+
+        function addWishItem() {
+            const name = document.getElementById('wish-name').value.trim();
+            const price = document.getElementById('wish-price').value.trim();
+            if(!name || !price) return;
+
+            state.wishlist.unshift({ name, price: parseFloat(price) });
+            document.getElementById('wish-name').value = '';
+            document.getElementById('wish-price').value = '';
+            saveAndSync();
+        }
+
+        async function askGeminiAdvisor() {
+            const inputEl = document.getElementById('chat-user-input');
+            const logsContainer = document.getElementById('chat-logs-container');
+            const userPrompt = inputEl.value.trim();
+            if (!userPrompt) return;
+
+            logsContainer.innerHTML += `
+                <div class="chat-bubble" style="align-self: flex-end; background: #1D2A3A; color: #FFF; border-radius: 16px 16px 0 16px;">${userPrompt}</div>
+            `;
+            inputEl.value = '';
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            const dataContextSummary = {
+                currentBalance: state.totalPool,
+                recentActivityLogs: state.records.map(r => `${r.date}: ${r.title} (${r.cat}) [${r.type === 'income' ? '+' : '-'}₹${r.amt}]`),
+                currentWishlistItems: state.wishlist
+            };
+
+            const dynamicPayload = {
+                contents: [{
+                    parts: [{
+                        text: `You are Capital AI, a premium personal finance assistant. 
+                        Here is the user's live financial status context data:
+                        - Current Balance: ₹${dataContextSummary.currentBalance}
+                        - Recent Ledger Transactions: ${JSON.stringify(dataContextSummary.recentActivityLogs)}
+                        - User Wishlist Goals: ${JSON.stringify(dataContextSummary.currentWishlistItems)}
+                        
+                        Answer the following user query accurately, keeping your tone sharp, premium, short, and highly insightful: "${userPrompt}"`
+                    }]
+                }]
+            };
+
+            const loaderId = "loading-" + Date.now();
+            logsContainer.innerHTML += `<div class="chat-bubble" id="${loaderId}" style="color: var(--text-muted);">Analyzing ledger vectors...</div>`;
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            try {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dynamicPayload)
+                });
+                const resultData = await response.json();
+                const generatedAiReplyText = resultData.candidates[0].content.parts[0].text;
+                document.getElementById(loaderId).remove();
+                logsContainer.innerHTML += `<div class="chat-bubble">${generatedAiReplyText}</div>`;
+            } catch (error) {
+                if(document.getElementById(loaderId)) document.getElementById(loaderId).remove();
+                logsContainer.innerHTML += `<div class="chat-bubble" style="border-color: var(--red); color: var(--red);">Ensure your API key is correctly inserted on line 282.</div>`;
             }
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
 
-            const leftInflowBox = document.getElementById('inflow-list');
-            const rightOutflowBox = document.getElementById('outflow-list');
-            leftInflowBox.innerHTML = '';
-            rightOutflowBox.innerHTML = '';
+        function saveAndSync() {
+            localStorage.setItem('premium_ledger_vault_prod_v2', JSON.stringify(state));
+            renderAppCoreState();
+        }
 
-            let totalOutflows = 0;
-            let foodOutflows = 0;
+        function renderAppCoreState() {
+            document.getElementById('dashboard-total-pool').innerText = `₹${state.totalPool.toLocaleString()}`;
 
-            appState.records.forEach(item => {
-                const isExpense = item.cost < 0 || item.group === 'expense';
-                const isO2C = item.group === 'o2c';
-                
-                let textTintClass = 'var(--premium-o2c)';
-                let prefixString = '';
+            const dashTarget = document.getElementById('dashboard-recent-target');
+            const inTarget = document.getElementById('all-inflows-target');
+            const outTarget = document.getElementById('all-outflows-target');
+            
+            dashTarget.innerHTML = ''; inTarget.innerHTML = ''; outTarget.innerHTML = '';
 
-                if (!isO2C) {
-                    if (isExpense) {
-                        textTintClass = 'var(--premium-outflow)';
-                        prefixString = '-';
-                        totalOutflows += Math.abs(item.cost);
-                        if (item.title.toLowerCase().includes('food') || item.title.toLowerCase().includes('dinner')) {
-                            foodOutflows += Math.abs(item.cost);
-                        }
-                    } else {
-                        textTintClass = 'var(--premium-inflow)';
-                        prefixString = '+';
+            let totalOutflowsSum = 0;
+            let totalInflowsSum = 0;
+            let categoriesMap = {};
+
+            state.records.forEach((rec, idx) => {
+                let sign = rec.type === 'income' ? '+' : (rec.type === 'expense' ? '-' : '');
+                let htmlRow = `
+                    <div class="activity-item">
+                        <div class="item-left-block">
+                            <div class="icon-wrapper ${rec.type}">${rec.icon}</div>
+                            <div class="meta-details">
+                                <span class="meta-title">${rec.title}</span>
+                                <div class="meta-sub-row">
+                                    <span class="badge-tag">${rec.cat}</span>
+                                    <span class="date-string">${rec.date}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="amount-value ${rec.type}">${sign}₹${rec.amt.toLocaleString()}</div>
+                    </div>
+                `;
+
+                if(idx < 5) dashTarget.innerHTML += htmlRow;
+                if(rec.type === 'income') { inTarget.innerHTML += htmlRow; totalInflowsSum += rec.amt; }
+                if(rec.type === 'expense' || rec.type === 'o2c') {
+                    outTarget.innerHTML += htmlRow;
+                    if(rec.type === 'expense') {
+                        totalOutflowsSum += rec.amt;
+                        categoriesMap[rec.cat] = (categoriesMap[rec.cat] || 0) + rec.amt;
                     }
                 }
-
-                let matchIndicatorStyle = '';
-                if (item.tag && contextMonthHashes[item.tag.toLowerCase()]) {
-                    matchIndicatorStyle = `background: ${contextMonthHashes[item.tag.toLowerCase()]};`;
-                }
-
-                const rowTemplateString = `
-                    <div class="mini-row">
-                        <div class="history-marker" style="${matchIndicatorStyle}"></div>
-                        <div class="mini-row-top">
-                            <span class="mini-title">${item.title}</span>
-                            <span class="mini-amt" style="color: ${textTintClass}">${isO2C ? '' : prefixString}₹${Math.abs(item.cost).toLocaleString()}</span>
-                        </div>
-                        <div class="mini-meta">
-                            <span>${item.timestamp}</span>
-                            ${item.tag ? `<span style="opacity:0.6;">• ${item.tag}</span>` : ''}
-                            <span style="letter-spacing:0.5px; font-weight:600; color:${textTintClass}">${item.group.toUpperCase()}</span>
-                        </div>
-                    </div>
-                `;
-
-                if (isExpense && !isO2C) {
-                    rightOutflowBox.innerHTML += rowTemplateString;
-                } else {
-                    leftInflowBox.innerHTML += rowTemplateString;
-                }
             });
 
-            if (leftInflowBox.innerHTML === '') leftInflowBox.innerHTML = '<div class="lbl-title" style="padding:20px 0; text-align:center;">No inflows</div>';
-            if (rightOutflowBox.innerHTML === '') rightOutflowBox.innerHTML = '<div class="lbl-title" style="padding:20px 0; text-align:center;">No outflows</div>';
+            if(dashTarget.innerHTML === '') dashTarget.innerHTML = `<div class="empty-state-card" style="padding:20px;">No entries recorded yet.</div>`;
 
-            const pctRatio = totalOutflows > 0 ? Math.round((foodOutflows / totalOutflows) * 100) : 0;
-            document.getElementById('metrics-pct-output').innerText = `${pctRatio}%`;
-            document.getElementById('metrics-formula-line').innerHTML = `Formula calculation: (${foodOutflows} food / ${totalOutflows} total) × 100 = ${pctRatio}% allocated to nutrition metrics channels.`;
-
-            renderWishlistUi(totalOutflows);
-        }
-
-        function renderWishlistUi(totalOutflows) {
-            const container = document.getElementById('wishlist-container');
-            container.innerHTML = '';
-
-            let loggedInflows = 0;
-            appState.records.forEach(r => { if (r.group === 'winnings' || r.cost > 0) loggedInflows += r.cost; });
-            
-            let approximateNetSavingsVelocity = (loggedInflows - totalOutflows);
-            if (approximateNetSavingsVelocity <= 0) approximateNetSavingsVelocity = 1500; 
-
-            let scalingDailyRateValue = Math.round(approximateNetSavingsVelocity / 30);
-            if (scalingDailyRateValue <= 0) scalingDailyRateValue = 120;
-
-            appState.wishlist.forEach(goal => {
-                const computationDaysResult = Math.ceil(goal.valuation / scalingDailyRateValue);
-                const efficiencyRatingText = computationDaysResult < 45 ? "High Asset Viability" : "Slight Resource Dilution Flagged";
-
-                container.innerHTML += `
-                    <div class="wish-card">
-                        <div class="wish-title">${goal.name}</div>
-                        <div style="font-size: 16px; font-weight: 300; margin-top:4px;">₹${goal.valuation.toLocaleString()}</div>
-                        <div class="wish-math">
-                            Requires approximately <span class="wish-highlight">${computationDaysResult} operational production working days</span> allocation based on current velocity metrics (Calculated at net generation parameter of ~₹${scalingDailyRateValue}/day).<br>
-                            <span style="color: var(--accent-blue); font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; display:inline-block; margin-top:6px;">Verdict: ${efficiencyRatingText}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function setupConsoleListeners() {
-            const entryField = document.getElementById('main-entry-box');
-            entryField.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && entryField.value.trim() !== '') {
-                    parsePremiumInputText(entryField.value.trim());
-                    entryField.value = '';
-                }
-            });
-
-            const chatField = document.getElementById('chat-input-box');
-            chatField.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && chatField.value.trim() !== '') {
-                    executeMockAiTurn(chatField.value.trim());
-                    chatField.value = '';
-                }
-            });
-        }
-
-        function parsePremiumInputText(str) {
-            let lower = str.toLowerCase();
-            let matches = str.match(/-?\d+[\d,']*/);
-            if (!matches) return;
-
-            let parsedAmt = parseInt(matches[0].replace(/,/g, ''));
-            let absoluteVal = Math.abs(parsedAmt);
-
-            let groupType = 'expense';
-            let titleText = str.replace(matches[0], '').trim() || 'Ledger Line Entry';
-
-            let monthToken = null;
-            const targetMonths = ['jan', 'feb', 'march', 'april', 'may', 'june', 'july', 'aug'];
-            targetMonths.forEach(m => { if (lower.includes(m)) monthToken = m; });
-
-            if (lower.includes('o2c') || lower.includes('neutral')) {
-                groupType = 'o2c';
-                absoluteVal = 0;
-            } else if (lower.includes('win') || lower.includes('winnings') || str.includes('+')) {
-                groupType = 'winnings';
+            // Sync Analytics View Chart Ring Calculations
+            document.getElementById('chart-center-total-out').innerText = `₹${totalOutflowsSum.toLocaleString()}`;
+            const ringElement = document.getElementById('donut-segment-ring');
+            if(ringElement) {
+                let totalVolume = totalInflowsSum + totalOutflowsSum;
+                let offsetValue = totalVolume > 0 ? 628 - ((totalOutflowsSum / totalVolume) * 628) : 628;
+                ringElement.style.strokeDashoffset = offsetValue;
             }
 
-            if (groupType === 'winnings') {
-                appState.capital += absoluteVal;
-            } else if (groupType === 'expense') {
-                appState.capital -= absoluteVal;
-                if (appState.capital <= 5000) {
-                    document.getElementById('tip-display').innerText = `⚠️ Balance dropping fast (₹${appState.capital}). AI recommends locking down asset channels.`;
-                }
+            const breakdownTarget = document.getElementById('analytics-breakdown-target');
+            breakdownTarget.innerHTML = '';
+            for (const [catName, catAmt] of Object.entries(categoriesMap)) {
+                let pct = totalOutflowsSum > 0 ? ((catAmt / totalOutflowsSum) * 100).toFixed(1) : 0;
+                breakdownTarget.innerHTML += `
+                    <div class="breakdown-row">
+                        <div class="breakdown-left">
+                            <span class="breakdown-title">${catName.charAt(0).toUpperCase() + catName.slice(1).toLowerCase()}</span>
+                            <span class="breakdown-pct">${pct}% of total</span>
+                        </div>
+                        <div class="amount-value outflow">-₹${catAmt.toLocaleString()}</div>
+                    </div>
+                `;
             }
 
-            appState.records.unshift({
-                id: Date.now(),
-                title: titleText.charAt(0).toUpperCase() + titleText.slice(1),
-                cost: groupType === 'expense' ? -absoluteVal : (groupType === 'winnings' ? absoluteVal : 0),
-                group: groupType,
-                tag: monthToken,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
-
-            syncStateEngine();
-        }
-
-        function executeMockAiTurn(userMsgText) {
-            const logsBox = document.getElementById('chat-output-logs');
-            logsBox.innerHTML += `<div class="msg user">${userMsgText}</div>`;
-
-            setTimeout(() => {
-                let lowerText = userMsgText.toLowerCase();
-                let replyString = "Query logged within system matrices. Portfolio metrics remain stable and balance parameters are verified.";
-
-                if (lowerText.includes('balance') || lowerText.includes('money')) {
-                    replyString = `Your currently synchronized active ledger score balance evaluates to precisely ₹${appState.capital.toLocaleString()}. Secure shutter toggles are operational.`;
-                } else if (lowerText.includes('ps5') || lowerText.includes('wishlist') || lowerText.includes('worth')) {
-                    replyString = `Wishlist diagnostic complete: A luxury payout of ₹50,000 maps to approximately 40+ operational cycles under present ledger trajectory variables. Avoid immediate secondary funding.`;
-                } else if (lowerText.includes('subscription') || lowerText.includes('march')) {
-                    replyString = `Duplicate pattern detected across month fields (March/June matching records at ₹1,200). Historical indicators highlighted on your left navigation.`;
-                }
-
-                logsBox.innerHTML += `<div class="msg ai">${replyString}</div>`;
-                logsBox.scrollTop = logsBox.scrollHeight;
-            }, 600);
-
-            logsBox.scrollTop = logsBox.scrollHeight;
-        }
-
-        function togglePrivacy() {
-            appState.isPrivate = !appState.isPrivate;
-            syncStateEngine();
-        }
-
-        function cycleTips() {
-            const targetTip = staticTipsList[Math.floor(Math.random() * staticTipsList.length)];
-            document.getElementById('tip-display').innerText = targetTip;
-        }
-
-        function switchMainTab(targetTabId) {
-            const ledBtn = document.getElementById('tab-ledger-btn');
-            const wishBtn = document.getElementById('tab-wish-btn');
-            const ledView = document.getElementById('ledger-tab-view');
-            const wishView = document.getElementById('wishlist-tab-view');
-
-            if (targetTabId === 'ledger') {
-                ledBtn.classList.add('active');
-                wishBtn.classList.remove('active');
-                ledView.style.display = 'flex';
-                wishView.style.display = 'none';
+            // Sync Wishlist Box Items
+            const wishBox = document.getElementById('wishlist-target-box');
+            if(state.wishlist.length > 0) {
+                wishBox.innerHTML = '';
+                state.wishlist.forEach(w => {
+                    wishBox.innerHTML += `
+                        <div class="breakdown-row" style="margin-bottom:10px;">
+                            <span class="breakdown-title">${w.name}</span>
+                            <span class="amount-value o2c">₹${w.price.toLocaleString()}</span>
+                        </div>
+                    `;
+                });
             } else {
-                wishBtn.classList.add('active');
-                ledBtn.classList.remove('active');
-                wishView.style.display = 'flex';
-                ledView.style.display = 'none';
+                wishBox.innerHTML = `<div class="empty-state-card">Add something you want to save up for</div>`;
             }
         }
-
-        function uiRoute(routeKey) {
-            document.getElementById('nav-home').classList.remove('active');
-            document.getElementById('nav-ai').classList.remove('active');
-
-            if (routeKey === 'home') {
-                document.getElementById('nav-home').classList.add('active');
-                closePanel('gemini-panel');
-            } else if (routeKey === 'ai') {
-                document.getElementById('nav-ai').classList.add('active');
-                openPanel('gemini-panel');
-            }
-        }
-
-        function openPanel(id) { document.getElementById(id).classList.add('active'); }
-        function closePanel(id) { document.getElementById(id).classList.remove('active'); }
     </script>
 </body>
 </html>
